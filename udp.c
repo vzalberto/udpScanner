@@ -96,7 +96,7 @@ main (int argc, char **argv)
   strcpy (src_ip, "192.168.0.6");
 
   // Destination URL or IPv4 address: you need to fill this out
-  strcpy (target, "192.168.0.1");
+  strcpy (target, argv[1]);
 
   // Fill out hints for getaddrinfo().
   memset (&hints, 0, sizeof (struct addrinfo));
@@ -240,36 +240,31 @@ main (int argc, char **argv)
     exit (EXIT_FAILURE);
   }
 
-  /*char *buff;
-
-  buff = allocate_strmem (42);
-  struct sockaddr_in sa;
-  sa.sin_port = htons(4950);
-  sa.sin_family = AF_INET;
-  sa.sin_addr.s_addr = htonl(INADDR_ANY);
-
-  int n = sizeof(sa);
-  int ssd;
-  if ((ssd = socket (PF_INET, SOCK_DGRAM, 0)) < 0) {
-    perror ("socket() failed ");
-    exit (EXIT_FAILURE);
-  }
-
-  if(bind(ssd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
-  {
-    perror("bind");
-    exit(1);
-  }
-int omg;
-omg = recvfrom (ssd, buff, 42, 0, (struct sockaddr *) &sa, &n);
+  int sock_raw, saddr_size, data_size;
+  struct sockaddr saddr;
+  unsigned char *buffer = (unsigned char *)malloc(65536); //Its Big!
 
 
- /* if (recvfrom (ssd, buff, 42, 0, (struct sockaddr *) &sa, &n) < 0)  {
-    perror ("recvfrom() failed ");
-    exit (EXIT_FAILURE);
-  }*//*
-printf("\n%d\n", omg);
-    printf("\n%x\n", buff[0]);*/
+  sock_raw = socket(AF_INET , SOCK_RAW , 1); //NO FUNCIONA CON HTONS POR QUEEEE
+    if(sock_raw < 0)
+    {
+        printf("Socket Error\n");
+        return 1;
+    }
+   
+        saddr_size = sizeof saddr;
+        //Receive a packet
+        data_size = recvfrom(sock_raw , buffer , 65536 , 0 , &saddr , &saddr_size);
+        if(data_size <0 )
+        {
+            printf("Recvfrom error , failed to get packets\n");
+            return 1;
+        }
+        //Now process the packet
+        
+        printf("\n>D\n");
+        printf("\nip origen: %02X %02X %02X %02X \n", buffer[12], buffer[13], buffer[14], buffer[15]);
+
 
 
   // Close socket descriptor.

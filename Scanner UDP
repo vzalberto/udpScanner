@@ -1,0 +1,4 @@
+Scanner UDP
+	THREADS o poll/select/enum ?
+		Threads: Implementacion relativamente facil
+				cuantos milisegundos por puerto (65535 puertos): 0.9155413138 milisegundos
