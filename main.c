@@ -259,7 +259,7 @@ void* sendPacket(void* target_ip)
 
 } 
 
-void* recvPacket(void *arg)
+void recvPacket()
 {
     int saddr_size , data_size;
     int sock_raw;
@@ -289,7 +289,7 @@ void* recvPacket(void *arg)
         //Now process the packet
         
         printf("\n>D\n");
-        printf("\nip origen: %02X %02X %02X %02X \n", buffer[12], buffer[13], buffer[14], buffer[15]);
+        printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
     }
 }
 
@@ -300,20 +300,14 @@ int main(int argc, char **argv)
     int err;
     char* target;
 
-    err = pthread_create(&(tid[i]), NULL, &recvPacket, NULL);
-        if (err != 0)
-            printf("\ncan't create thread :[%s]", strerror(err));
-        else
-            printf("\n Receiving... \n");
-
     err = pthread_create(&(tid[i]), NULL, &sendPacket, &target);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
         else
             printf("\n Sending...\n");
 
+    recvPacket();
 
-    sleep(5);
     return 0;
 }
 
