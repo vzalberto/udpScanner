@@ -32,28 +32,9 @@ int *allocate_intmem (int);
 
 pthread_t tid[2];
 
-void* doSomeThing(void *arg)
+void* sendPacket(void* args)
 {
-    unsigned long i = 0;
-    pthread_t id = pthread_self();
-
-    if(pthread_equal(id,tid[0]))
-    {
-        printf("\n First thread processing\n");
-    }
-    else
-    {
-        printf("\n Second thread processing\n");
-    }
-
-    for(i=0; i<(0xFFFFFFFF);i++);
-
-    return NULL;
-}
-
-void* sendPacket(void* target_ip)
-{
-    int status, datalen, sd, *ip_flags;
+  int status, datalen, sd, *ip_flags;
   const int on = 1;
   char *interface, *target, *src_ip, *dst_ip;
   struct ip iphdr;
@@ -63,7 +44,6 @@ void* sendPacket(void* target_ip)
   struct sockaddr_in *ipv4, sin;
   struct ifreq ifr;
   void *tmp;
-
 
   // Allocate memory for various arrays.
   data = allocate_ustrmem (IP_MAXPACKET);
@@ -93,7 +73,6 @@ void* sendPacket(void* target_ip)
     return;
   }
   close (sd);
-  printf ("Index for interface %s is %i\n", interface, ifr.ifr_ifindex);
 
   // Source IPv4 address: you need to fill this out
   strcpy (src_ip, "192.168.0.6");
@@ -123,10 +102,10 @@ void* sendPacket(void* target_ip)
 
   // UDP data
   datalen = 4;
-  data[0] = 'T';
-  data[1] = 'e';
-  data[2] = 's';
-  data[3] = 't';
+  data[0] = 'H';
+  data[1] = 'O';
+  data[2] = 'L';
+  data[3] = 'A';
 
   // IPv4 header
 
@@ -169,6 +148,7 @@ void* sendPacket(void* target_ip)
 
   // Transport layer protocol (8 bits): 17 for UDP
   iphdr.ip_p = IPPROTO_UDP;
+{
 
   // Source IPv4 address (32 bits)
   if ((status = inet_pton (AF_INET, src_ip, &(iphdr.ip_src))) != 1) {
@@ -246,8 +226,6 @@ void* sendPacket(void* target_ip)
     exit (EXIT_FAILURE);
   }
 
-  printf("\nPaquete enviado al puerto %d\n", packets);
-
   memset (packet, '0x00', IP4_HDRLEN + UDP_HDRLEN + datalen);
   packets++;
 
@@ -255,6 +233,8 @@ void* sendPacket(void* target_ip)
   close (sd);
 
   }
+
+  printf("\n%d paquetes UDP enviados\n", packets);
   
   // Free allocated memory.
   free (data);
@@ -264,15 +244,23 @@ void* sendPacket(void* target_ip)
   free (dst_ip);
   free (ip_flags);
 
-} 
+}
 
-void recvPacket()
+
+
+
+
+}
+
+
+void* recvPacket()
 {
-    int saddr_size , data_size;
+    int saddr_size , data_size, packets;
     int sock_raw;
     struct sockaddr_in source,dest;
     struct sockaddr saddr;
     struct in_addr in;
+    struct timeval tv;
      
     unsigned char *buffer = (unsigned char *)malloc(65536); //Its Big!
      
@@ -281,8 +269,11 @@ void recvPacket()
     if(sock_raw < 0)
     {
         printf("Socket Error\n");
-        return;
+        return -1;
     }
+
+    packets = 0;
+
     while(1)
     {
         saddr_size = sizeof saddr;
@@ -291,13 +282,19 @@ void recvPacket()
         if(data_size <0 )
         {
             printf("Recvfrom error , failed to get packets\n");
-            return;
+            return -1;
         }
         //Now process the packet
-        
-        printf("\n>D\n");
-        printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
+        packets++;
+        //printf("\nPaquetes recibidos: %d\n", packets);
+        //printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
+        gettimeofday(&tv, NULL);
+
+
     }
+
+    return (void *) packets;    
+
 }
 
 
@@ -307,13 +304,21 @@ int main(int argc, char **argv)
     int err;
     char* target;
 
-    err = pthread_create(&(tid[i]), NULL, &sendPacket, &target);
+    err = pthread_create(&(tid[0]), NULL, &sendPacket, &target);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
         else
             printf("\n Sending...\n");
 
-    recvPacket();
+     err = pthread_create(&(tid[1]), NULL, &recvPacket, NULL);
+        if (err != 0)
+            printf("\ncan't create thread :[%s]", strerror(err));
+        else
+            printf("\n Receiving...\n");
+
+
+    sleep(5);
+    printf("\nBYE\n"); 
 
     return 0;
 }
