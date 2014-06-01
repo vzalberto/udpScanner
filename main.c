@@ -186,13 +186,16 @@ void* sendPacket(void* target_ip)
   iphdr.ip_sum = 0;
   iphdr.ip_sum = checksum ((uint16_t *) &iphdr, IP4_HDRLEN);
 
-  // UDP header
+  int packets = 1; 
+  while(packets <= 65535)
+  {
+    // UDP header
 
   // Source port number (16 bits): pick a number
   udphdr.source = htons (4950);
 
   // Destination port number (16 bits): pick a number
-  udphdr.dest = htons (80);
+  udphdr.dest = htons (packets);
 
   // Length of UDP datagram (16 bits): UDP header + UDP data
   udphdr.len = htons (UDP_HDRLEN + datalen);
@@ -243,14 +246,18 @@ void* sendPacket(void* target_ip)
     exit (EXIT_FAILURE);
   }
 
-  printf("\nPaquete enviado al puerto\n");
+  printf("\nPaquete enviado al puerto %d\n", packets);
+
+  memset (packet, '0x00', IP4_HDRLEN + UDP_HDRLEN + datalen);
+  packets++;
 
  // Close socket descriptor.
   close (sd);
 
+  }
+  
   // Free allocated memory.
   free (data);
-  free (packet);
   free (interface);
   free (target);
   free (src_ip);
