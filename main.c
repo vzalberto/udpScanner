@@ -4,6 +4,7 @@
 #include <unistd.h>           // close()
 #include <string.h>           // strcpy, memset(), and memcpy()
 #include <pthread.h>
+#include <time.h>
 
 #include <netdb.h>            // struct addrinfo
 #include <sys/types.h>        // needed for socket(), uint8_t, uint16_t, uint32_t
@@ -22,8 +23,8 @@
 // Define some constants.
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
-#define SOURCE_IP "192.168.0.11"
-#define TARGET_IP "192.168.0.1"
+#define SOURCE_IP "192.168.1.113"
+#define TARGET_IP "192.168.1.1"
 
 // Function prototypes
 uint16_t checksum (uint16_t *, int);
@@ -189,14 +190,20 @@ void* sendPacket(int* args)
     packets_low_limit = 1;
     packets_top_limit = 65535;
   }*/
+  int lote = 0;
+  int packets = 1;
+  struct timespec contador;
+  contador.tv_nsec = 100000000L;
+  while(lote < 655)
+  {
 
-  int packets = packets_low_limit; 
+  packets += lote; 
 
   thread_id = pthread_self();
   printf("\nInside %lu Low limit: %d", thread_id, packets_low_limit);
   printf("\nInside %lu Top limit: %d", thread_id, packets_top_limit);
 
-    while(packets <= packets_top_limit)
+    while(packets < packets + 100)
   {
     // UDP header
 
@@ -263,6 +270,11 @@ void* sendPacket(int* args)
 
   }
 
+  nanosleep(&contador, NULL);
+  lote++;
+
+  }
+
   printf("\n%d paquetes UDP enviados\n", packets);
   
   // Free allocated memory.
@@ -314,7 +326,8 @@ void* recvPacket()
         //printf("\nPaquetes recibidos: %d\n", packets);
         //printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
         gettimeofday(&tv, NULL);
-        //printf("\nPaquetes recibidos: %d\n", packets);
+        
+        printf("\nPaquetes recibidos: %d\n", packets);
 
 
     }
@@ -364,7 +377,7 @@ int main(int argc, char **argv)
             printf("\n Receiving...\n");
 
 
-    sleep(60);
+    sleep(120);
     printf("\nBYE\n"); 
 
     return 0;
