@@ -22,7 +22,7 @@
 // Define some constants.
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
-#define SOURCE_IP "192.168.0.6"
+#define SOURCE_IP "192.168.0.11"
 #define TARGET_IP "192.168.0.1"
 
 // Function prototypes
@@ -46,6 +46,7 @@ void* sendPacket(int* args)
   struct sockaddr_in *ipv4, sin;
   struct ifreq ifr;
   void *tmp;
+  pthread_t thread_id;
 
    // Allocate memory for various arrays.
   data = allocate_ustrmem (IP_MAXPACKET);
@@ -175,10 +176,10 @@ void* sendPacket(int* args)
   iphdr.ip_sum = checksum ((uint16_t *) &iphdr, IP4_HDRLEN);
 
 
-  int packets_low_limit;
-  int packets_top_limit; 
+  unsigned short packets_low_limit = 1;
+  unsigned short packets_top_limit = 65535; 
 
-  if(args[1])
+ /* if(args[1])
   {
     packets_low_limit = args[0];
     packets_top_limit = args[1];
@@ -187,11 +188,13 @@ void* sendPacket(int* args)
   {
     packets_low_limit = 1;
     packets_top_limit = 65535;
-  }
+  }*/
+
   int packets = packets_low_limit; 
 
-          printf("\nLow limit: %d", args[0]);
-          printf("\nTop limit: %d", args[1]);
+  thread_id = pthread_self();
+  printf("\nInside %lu Low limit: %d", thread_id, packets_low_limit);
+  printf("\nInside %lu Top limit: %d", thread_id, packets_top_limit);
 
     while(packets <= packets_top_limit)
   {
@@ -252,7 +255,7 @@ void* sendPacket(int* args)
     exit (EXIT_FAILURE);
   }
 
-  memset (packet, '0x00', IP4_HDRLEN + UDP_HDRLEN + datalen);
+  memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
   packets++;
 
  // Close socket descriptor.
@@ -329,31 +332,30 @@ int main(int argc, char **argv)
 
     int sendPacket_args[2];
     sendPacket_args[0] = 1;
-    sendPacket_args[1] = 4369;
+    sendPacket_args[1] = 32767;
 
-    while(i < 2)
+  /*  while(i < 2)
     {
       
-          printf("\nLow limit main: %d", sendPacket_args[0]);
-          printf("\nTop limit main: %d", sendPacket_args[1]);
       err = pthread_create(&(tid[i]), NULL, &sendPacket, sendPacket_args);
+        if (err != 0)
+            printf("\ncan't create thread :[%s]", strerror(err));
+
+          printf("\nTHREAD %d", i + 1);
+          printf("\nLow limit main: %d", sendPacket_args[0]);
+          printf("\nTop limit main: %d\n", sendPacket_args[1]);
+
+          sendPacket_args[0]+=32767;
+          sendPacket_args[1]+=32767;
+          i++;
+
+    }*/
+
+    err = pthread_create(&(tid[0]), NULL, &sendPacket, NULL);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
         else
             printf("\n Sending...\n");
-
-          sendPacket_args[0]+=4369;
-          sendPacket_args[1]+=4369;
-          i++;
-          printf("\nTHREAD %d", i);
-
-    }
-
-    /*err = pthread_create(&(tid[0]), NULL, &sendPacket, &target);
-        if (err != 0)
-            printf("\ncan't create thread :[%s]", strerror(err));
-        else
-            printf("\n Sending...\n");*/
 
      err = pthread_create(&(tid[1]), NULL, &recvPacket, NULL);
         if (err != 0)
