@@ -22,6 +22,8 @@
 // Define some constants.
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
+#define SOURCE_IP "192.168.0.6"
+#define TARGET_IP "192.168.0.1"
 
 // Function prototypes
 uint16_t checksum (uint16_t *, int);
@@ -30,9 +32,9 @@ char *allocate_strmem (int);
 uint8_t *allocate_ustrmem (int);
 int *allocate_intmem (int);
 
-pthread_t tid[2];
+pthread_t tid[16];
 
-void* sendPacket(void* args)
+void* sendPacket(int* args)
 {
   int status, datalen, sd, *ip_flags;
   const int on = 1;
@@ -45,7 +47,7 @@ void* sendPacket(void* args)
   struct ifreq ifr;
   void *tmp;
 
-  // Allocate memory for various arrays.
+   // Allocate memory for various arrays.
   data = allocate_ustrmem (IP_MAXPACKET);
   packet = allocate_ustrmem (IP_MAXPACKET);
   interface = allocate_strmem (40);
@@ -75,10 +77,16 @@ void* sendPacket(void* args)
   close (sd);
 
   // Source IPv4 address: you need to fill this out
-  strcpy (src_ip, "192.168.0.6");
+  //Starbucks: 10.133.241.93
+  //MOTOROLA: 192.168.0.6
+
+  strcpy (src_ip, SOURCE_IP);
 
   // Destination URL or IPv4 address: you need to fill this out
-  strcpy (target, "192.168.0.1");
+  //Starbucks: 10.128.128.128
+  //Target MOTOROLA: 192.168.0.1
+
+  strcpy (target, TARGET_IP);
 
   // Fill out hints for getaddrinfo().
   memset (&hints, 0, sizeof (struct addrinfo));
@@ -166,8 +174,22 @@ void* sendPacket(void* args)
   iphdr.ip_sum = 0;
   iphdr.ip_sum = checksum ((uint16_t *) &iphdr, IP4_HDRLEN);
 
-  int packets = 1; 
-  while(packets <= 65535)
+
+  int packets_low_limit;
+  int packets_top_limit; 
+
+  if(args[1])
+  {
+    packets_low_limit = args[0];
+    packets_top_limit = args[1];
+  }
+  else
+  {
+    packets_low_limit = 1;
+    packets_top_limit = 65535;
+  }
+  int packets = packets_low_limit; 
+  while(packets <= packets_top_limit)
   {
     // UDP header
 
@@ -246,10 +268,6 @@ void* sendPacket(void* args)
 
 }
 
-
-
-
-
 }
 
 
@@ -289,6 +307,7 @@ void* recvPacket()
         //printf("\nPaquetes recibidos: %d\n", packets);
         //printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
         gettimeofday(&tv, NULL);
+        printf("\nPaquetes recibidos: %d\n", packets);
 
 
     }
@@ -304,6 +323,23 @@ int main(int argc, char **argv)
     int err;
     char* target;
 
+    int sendPacket_args[2];
+    sendPacket_args[0] = 1;
+    sendPacket_args[1] = 4369;
+
+    while(i < 15)
+    {
+      err = pthread_create(&(tid[i]), NULL, &sendPacket, sendPacket_args);
+        if (err != 0)
+            printf("\ncan't create thread :[%s]", strerror(err));
+        else
+            printf("\n Sending...\n");
+
+          sendPacket_args[0]=+4369;
+          sendPacket_args[1]=+4369;
+          i++;
+    }
+
     err = pthread_create(&(tid[0]), NULL, &sendPacket, &target);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
@@ -317,7 +353,7 @@ int main(int argc, char **argv)
             printf("\n Receiving...\n");
 
 
-    sleep(5);
+    sleep(60);
     printf("\nBYE\n"); 
 
     return 0;
