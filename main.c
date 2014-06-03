@@ -189,7 +189,11 @@ void* sendPacket(int* args)
     packets_top_limit = 65535;
   }
   int packets = packets_low_limit; 
-  while(packets <= packets_top_limit)
+
+          printf("\nLow limit: %d", args[0]);
+          printf("\nTop limit: %d", args[1]);
+
+    while(packets <= packets_top_limit)
   {
     // UDP header
 
@@ -307,7 +311,7 @@ void* recvPacket()
         //printf("\nPaquetes recibidos: %d\n", packets);
         //printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
         gettimeofday(&tv, NULL);
-        printf("\nPaquetes recibidos: %d\n", packets);
+        //printf("\nPaquetes recibidos: %d\n", packets);
 
 
     }
@@ -327,24 +331,29 @@ int main(int argc, char **argv)
     sendPacket_args[0] = 1;
     sendPacket_args[1] = 4369;
 
-    while(i < 15)
+    while(i < 2)
     {
+      
+          printf("\nLow limit main: %d", sendPacket_args[0]);
+          printf("\nTop limit main: %d", sendPacket_args[1]);
       err = pthread_create(&(tid[i]), NULL, &sendPacket, sendPacket_args);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
         else
             printf("\n Sending...\n");
 
-          sendPacket_args[0]=+4369;
-          sendPacket_args[1]=+4369;
+          sendPacket_args[0]+=4369;
+          sendPacket_args[1]+=4369;
           i++;
+          printf("\nTHREAD %d", i);
+
     }
 
-    err = pthread_create(&(tid[0]), NULL, &sendPacket, &target);
+    /*err = pthread_create(&(tid[0]), NULL, &sendPacket, &target);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
         else
-            printf("\n Sending...\n");
+            printf("\n Sending...\n");*/
 
      err = pthread_create(&(tid[1]), NULL, &recvPacket, NULL);
         if (err != 0)
