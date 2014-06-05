@@ -20,11 +20,15 @@
 
 #include <errno.h>            // errno, perror()
 
+#include <mysql/mysql.h>
+
 // Define some constants.
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 #define SOURCE_IP "192.168.1.113"
 #define TARGET_IP "192.168.1.1"
+
+#define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
 
 // Function prototypes
 uint16_t checksum (uint16_t *, int);
@@ -271,6 +275,7 @@ void* sendPacket(int* args)
   }
 
   nanosleep(&contador, NULL);
+  printf("\nEnviado el lote: %d\n", lote);
   lote++;
 
   }
@@ -328,7 +333,6 @@ void* recvPacket()
         gettimeofday(&tv, NULL);
         
         printf("\nPaquetes recibidos: %d\n", packets);
-
 
     }
 
@@ -541,5 +545,35 @@ allocate_intmem (int len)
     fprintf (stderr, "ERROR: Cannot allocate memory for array allocate_intmem().\n");
     exit (EXIT_FAILURE);
   }
+}
+
+void actualizaEnTabla(int puerto)
+{
+  MYSQL *conn;
+  
+  char *server = "localhost";
+  char *user = "root";
+  char *password = "//lsoazules"; 
+  char *database = "redes";
+
+  conn = mysql_init(NULL);
+  if(!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) 
+  { 
+    fprintf(stderr, "ERROR para conectarse a mysql", mysql_error(conn));
+    return -1;
+  }
+
+  char pseudo_insert_query[60];
+  char port_string[5];
+
+  strcat(pseudo_insert_query, PORT_REPLY_UPDATE);
+
+  snprintf(port_string, "%d", puerto);
+  strncat(pseudo_insert_query, port_string, 5);
+
+  if(mysql_query(conn, query))
+      fprintf(stderr, "\nNEL con el query\n", mysql_error(conn));
+
+  mysql_close(conn);
 }
 
