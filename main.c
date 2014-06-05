@@ -27,7 +27,7 @@
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 
 #define SOURCE_IP "8.25.100.15"
-#define TARGET_IP "8.25.100.3"
+#define TARGET_IP "8.25.100.1"
 
 #define ETH "eth0"
 
@@ -196,11 +196,16 @@ void* sendPacket(int* args)
   unsigned short packets_top_limit = 65535; 
 
   int lote = 0;
-  int packets = 1;
   struct timespec contador;
   contador.tv_nsec = 100000000L;
 
-  while(packets < 65535)
+
+  int packets = 1;
+
+while(lote < 100)
+{
+
+  while(packets < (packets +650))
   {
 
       // UDP header
@@ -266,11 +271,14 @@ void* sendPacket(int* args)
   memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
   packets++;
 }
-  
 
   nanosleep(&contador, NULL);
+  lote++;
+  printf("\n%d\n", lote);
+}
 
-  printf("\n%d paquetes UDP enviados\n", packets);
+
+  //printf("\n%d paquetes UDP enviados\n", packets);
   
   // Free allocated memory.
   free (data);
@@ -287,7 +295,7 @@ void* recvPacket()
 {
     int saddr_size , data_size, packets;
     int sock_raw;
-    struct sockaddr_in source,dest;
+    struct sockaddr_in omg;
     struct sockaddr saddr;
     struct in_addr in;
     struct timeval tv;
@@ -302,42 +310,40 @@ void* recvPacket()
         return -1;
     }
 
-    packets = 0;
+    omg.sin_family = AF_INET;
+    omg.sin_port = htons(4950);
+    omg.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    if (bind(sock_raw, (struct sockaddr *)&omg, sizeof(omg)) < 0)
+    {
+      perror("NEL con bind");
+      exit(1);
+      }
+          packets = 0;
 
     while(1)
     {
-        saddr_size = sizeof (source);
+        saddr_size = sizeof (omg);
         //Receive a packet
-        data_size = recvfrom(sock_raw , buffer , 65536 , 0 , (struct sockaddr *)&source , &saddr_size);
+        data_size = recvfrom(sock_raw , buffer , 65536 , 0 , (struct sockaddr *)&omg , &saddr_size);
         if(data_size <0 )
         {
             printf("Recvfrom error , failed to get packets\n");
             return -1;
         }
+
         //Now process the packet
         packets++;
-        //printf("\nPaquetes recibidos: %d\n", packets);
-
-        int i = 12;
-        for(i; i < 25; i++)
-        {if(i%8 == 0)
+        int i = 0;
+        for(i; i < 100; i++)
+        {
+          if(i%8 == 0)
             printf("\n");
           printf("%02X ", buffer[i]);
-          
-
         }
 
         printf("\n\n\n\n");
-
-        /*short port_int;
-        printf("\nEl puerto es el %hu\n", buffer[50]);
-        port_int = (unsigned short) buffer[50];*/
-        //
-
-
-
-        gettimeofday(&tv, NULL);
-        
+        gettimeofday(&tv, NULL);        
         printf("\nPaquetes recibidos: %d\n", packets);
 
     }
