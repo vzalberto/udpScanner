@@ -26,11 +26,13 @@
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 
-#define SOURCE_IP "192.168.0.3"
-#define TARGET_IP "192.168.0.1"
+#define SOURCE_IP "192.168.1.105"
+#define TARGET_IP "192.168.1.1"
+
 #define ETH "eth0"
 
 #define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
+#define FINAL_QUERY "select * from puertosudp where estado = 1"
 
 // Function prototypes
 uint16_t checksum (uint16_t *, int);
@@ -193,7 +195,6 @@ void* sendPacket(int* args)
   while(packets < 65535)
   {
 
-      printf("\nquiero %d panochas de guapa\n",  packets);
       // UDP header
 
      // Source port number (16 bits): pick a number
@@ -256,7 +257,6 @@ void* sendPacket(int* args)
 
   memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
   packets++;
- 
 }
   
 
@@ -298,9 +298,9 @@ void* recvPacket()
 
     while(1)
     {
-        saddr_size = sizeof saddr;
+        saddr_size = sizeof (source);
         //Receive a packet
-        data_size = recvfrom(sock_raw , buffer , 65536 , 0 , &saddr , &saddr_size);
+        data_size = recvfrom(sock_raw , buffer , 65536 , 0 , (struct sockaddr *)&source , &saddr_size);
         if(data_size <0 )
         {
             printf("Recvfrom error , failed to get packets\n");
@@ -309,9 +309,12 @@ void* recvPacket()
         //Now process the packet
         packets++;
         //printf("\nPaquetes recibidos: %d\n", packets);
-        //printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
+        printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
 
-        int port_int;
+        short port_int;
+        printf("\nEl puerto es el %hu\n", buffer[50]);
+        port_int = (unsigned short) buffer[50];
+        //
 
 
 
@@ -562,3 +565,39 @@ void actualizaEnTabla(int puerto)
   mysql_close(conn);
 }
 
+void printSockaddr(struct sockaddr *in)
+{
+  int size = sizeof(in);
+}
+
+void consultapuertos()
+{
+  MYSQL *conn;
+  MYSQL_RES *res;
+  MYSQL_ROW row;
+  
+  char *server = "localhost";
+  char *user = "root";
+  char *password = "//lsoazules"; 
+  char *database = "redes";
+
+  conn = mysql_init(NULL);
+
+  if(mysql_query(conn, query))
+            fprintf(stderr, "\nNEL con el query, quien sabe si tiene puertos abiertos, te la debo\n", mysql_error(conn));     
+  else
+    {
+            res = mysql_use_result(conn);
+            if((row = mysql_fetch_row(res)) != NULL)
+            {
+              printf("\nPUERTOS ABIERTOS\n");
+              printf("%s  ", row[0]);
+            }
+            else
+            
+              printf("No puertos abiertos\n");
+          }
+
+
+
+}
