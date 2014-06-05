@@ -332,8 +332,11 @@ void* recvPacket()
             return -1;
         }
 
-        //Now process the packet
         packets++;
+
+        //Now process the packet
+        unsigned short puerto;
+        puerto = (buffer[50] << 8) + buffer[51];
         int i = 0;
         for(i; i < 100; i++)
         {
@@ -341,6 +344,8 @@ void* recvPacket()
             printf("\n");
           printf("%02X ", buffer[i]);
         }
+
+        printf("\nEL PUTO PUERTO ES %hu\n", puerto);
 
         printf("\n\n\n\n");
         gettimeofday(&tv, NULL);        
