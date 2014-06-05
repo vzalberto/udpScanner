@@ -34,6 +34,10 @@
 #define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
 #define FINAL_QUERY "select * from puertosudp where estado = 1"
 
+#define INFLATE_PORT_TABLE "delimiter $$ drop procedure if exists load_port_table $$ create procedure load_port_table () begin declare crs int default 1; while crs < 6556 do insert into puertosudp (puerto) values (crs); set crs = crs + 1; end while; end $$ delimiter ;"
+
+#define RESET_PORTS "truncate table puertosudp;"
+
 // Function prototypes
 uint16_t checksum (uint16_t *, int);
 uint16_t udp4_checksum (struct ip, struct udphdr, uint8_t *, int);
@@ -599,5 +603,49 @@ void consultapuertos()
           }
 
     mysql_free_result(res);
+    mysql_close(conn);
+}
+
+void setPorts()
+{
+  MYSQL *conn;
+  
+  char *server = "localhost";
+  char *user = "root";
+  char *password = "//lsoazules"; 
+  char *database = "redes";
+
+  conn = mysql_init(NULL);
+
+  if(mysql_query(conn, INFLATE_PORT_TABLE))
+  {    
+            fprintf(stderr, "\nError al cargar lista de puertos\n", mysql_error(conn));
+            exit(1);     
+  }
+  else
+    printf("\nTabla de puertos lista\n");
+              
+    mysql_close(conn);
+}
+
+void resetPorts()
+{
+  MYSQL *conn;
+  
+  char *server = "localhost";
+  char *user = "root";
+  char *password = "//lsoazules"; 
+  char *database = "redes";
+
+  conn = mysql_init(NULL);
+
+  if(mysql_query(conn, RESET_PORTS))
+  {    
+            fprintf(stderr, "\nError al resetear lista de puertos\n", mysql_error(conn));
+            exit(1);     
+  }
+  else
+    printf("\nTabla de puertos lista\n");
+              
     mysql_close(conn);
 }
