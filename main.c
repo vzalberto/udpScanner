@@ -26,8 +26,8 @@
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 
-#define SOURCE_IP "8.25.100.15"
-#define TARGET_IP "8.25.100.1"
+#define SOURCE_IP "192.168.1.105"
+#define TARGET_IP "192.168.1.1"
 
 #define ETH "eth0"
 
@@ -37,7 +37,7 @@
 #define DELIMITER_PROCEDURE "delimiter $$ drop procedure if exists load_port_table $$ "
 #define PROCEDURE_DEF "create procedure load_port_table () begin declare crs int default 1; while crs < 65536 do insert into puertosudp (puerto) values (crs); set crs = crs + 1; end while; end $$ "
 #define END_DELIMITER "delimiter ; "
-#define PROCEDURE_CALL "call procedure load_port_table()"
+#define PROCEDURE_CALL "call load_port_table()"
 
 #define RESET_PORTS "truncate table puertosudp;"
 
@@ -337,6 +337,9 @@ void* recvPacket()
         //Now process the packet
         unsigned short puerto;
         puerto = (buffer[50] << 8) + buffer[51];
+        if(puerto != 0)
+        {
+          
         int i = 0;
         for(i; i < 100; i++)
         {
@@ -346,11 +349,13 @@ void* recvPacket()
         }
 
         printf("\nEL PUTO PUERTO ES %hu\n", puerto);
+        actualizaEnTabla(puerto);
 
         printf("\n\n\n\n");
         gettimeofday(&tv, NULL);        
         printf("\nPaquetes recibidos: %d\n", packets);
 
+        }
     }
 
     return (void *) packets;    
@@ -401,6 +406,7 @@ int main(int argc, char **argv)
 
 
     sleep(120);
+    consultapuertos();
     printf("\nBYE\n"); 
 
     return 0;
@@ -566,7 +572,7 @@ allocate_intmem (int len)
   }
 }
 
-void actualizaEnTabla(int puerto)
+void actualizaEnTabla(unsigned short puerto)
 {
   MYSQL *conn;
   
@@ -583,15 +589,17 @@ void actualizaEnTabla(int puerto)
   }
 
   char pseudo_insert_query[60];
+  memset(pseudo_insert_query, 0x00, 59);
   char port_string[5];
 
   strcat(pseudo_insert_query, PORT_REPLY_UPDATE);
 
-  sprintf(port_string, "%d", puerto);
+  sprintf(port_string, "%hu", puerto);
   strncat(pseudo_insert_query, port_string, 5);
+  printf("\n%s\n", pseudo_insert_query);
 
   if(mysql_query(conn, pseudo_insert_query))
-      fprintf(stderr, "\nNEL con el query\n", mysql_error(conn));
+      fprintf(stderr, "\nNEL con la actualizacion del puerto\n", mysql_error(conn));
 
   mysql_close(conn);
 }
