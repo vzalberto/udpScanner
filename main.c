@@ -34,7 +34,10 @@
 #define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
 #define FINAL_QUERY "select * from puertosudp where estado = 1"
 
-#define INFLATE_PORT_TABLE "delimiter $$ drop procedure if exists load_port_table $$ create procedure load_port_table () begin declare crs int default 1; while crs < 6556 do insert into puertosudp (puerto) values (crs); set crs = crs + 1; end while; end $$ delimiter ;"
+#define DELIMITER_PROCEDURE "delimiter $$ drop procedure if exists load_port_table $$ "
+#define PROCEDURE_DEF "create procedure load_port_table () begin declare crs int default 1; while crs < 65536 do insert into puertosudp (puerto) values (crs); set crs = crs + 1; end while; end $$ "
+#define END_DELIMITER "delimiter ; "
+#define PROCEDURE_CALL "call procedure load_port_table()"
 
 #define RESET_PORTS "truncate table puertosudp;"
 
@@ -343,6 +346,9 @@ int main(int argc, char **argv)
     sendPacket_args[0] = 1;
     sendPacket_args[1] = 32767;
 
+  resetPorts();
+  setPorts();
+
   /*  while(i < 2)
     {
       
@@ -616,14 +622,26 @@ void setPorts()
   char *database = "redes";
 
   conn = mysql_init(NULL);
+  if(!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) 
+  { 
+    fprintf(stderr, "ERROR para conectarse a mysql", mysql_error(conn));
+    return -1;
+  }
+  else
+  {    
+    char query[90];
+    strcat(query, INFLATE_PORT_TABLE);
+    printf("\nEstableciendo la tabla de puertos: %s\n", query);
 
-  if(mysql_query(conn, INFLATE_PORT_TABLE))
+  if(mysql_query(conn, query))
   {    
             fprintf(stderr, "\nError al cargar lista de puertos\n", mysql_error(conn));
             exit(1);     
   }
+  
   else
     printf("\nTabla de puertos lista\n");
+}
               
     mysql_close(conn);
 }
@@ -639,13 +657,24 @@ void resetPorts()
 
   conn = mysql_init(NULL);
 
-  if(mysql_query(conn, RESET_PORTS))
+  if(!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) 
+  { 
+    fprintf(stderr, "ERROR para conectarse a mysql", mysql_error(conn));
+    return -1;
+  }
+  else
+  {    
+    char query[90];
+    strcat(query, RESET_PORTS);
+    printf("\nTruncando la tabla de puertos: %s\n", query);
+
+  if(mysql_query(conn, query))
   {    
             fprintf(stderr, "\nError al resetear lista de puertos\n", mysql_error(conn));
             exit(1);     
   }
   else
     printf("\nTabla de puertos lista\n");
-              
+              }
     mysql_close(conn);
 }
