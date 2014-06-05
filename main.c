@@ -25,8 +25,10 @@
 // Define some constants.
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
-#define SOURCE_IP "192.168.1.113"
-#define TARGET_IP "192.168.1.1"
+
+#define SOURCE_IP "192.168.0.3"
+#define TARGET_IP "192.168.0.1"
+#define ETH "eth0"
 
 #define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
 
@@ -63,7 +65,7 @@ void* sendPacket(int* args)
   ip_flags = allocate_intmem (4);
 
   // Interface to send packet through.
-  strcpy (interface, "wlan0");
+  strcpy (interface, ETH);
 
   // Submit request for a socket descriptor to look up interface.
   if ((sd = socket (AF_INET, SOCK_RAW, IPPROTO_RAW)) < 0) {
@@ -330,6 +332,11 @@ void* recvPacket()
         packets++;
         //printf("\nPaquetes recibidos: %d\n", packets);
         //printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
+
+        int port_int;
+
+
+
         gettimeofday(&tv, NULL);
         
         printf("\nPaquetes recibidos: %d\n", packets);
@@ -568,10 +575,10 @@ void actualizaEnTabla(int puerto)
 
   strcat(pseudo_insert_query, PORT_REPLY_UPDATE);
 
-  snprintf(port_string, "%d", puerto);
+  sprintf(port_string, "%d", puerto);
   strncat(pseudo_insert_query, port_string, 5);
 
-  if(mysql_query(conn, query))
+  if(mysql_query(conn, pseudo_insert_query))
       fprintf(stderr, "\nNEL con el query\n", mysql_error(conn));
 
   mysql_close(conn);
