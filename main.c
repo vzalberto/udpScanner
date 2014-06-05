@@ -26,8 +26,8 @@
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 
-#define SOURCE_IP "192.168.1.105"
-#define TARGET_IP "192.168.1.1"
+#define SOURCE_IP "8.25.100.15"
+#define TARGET_IP "8.25.100.3"
 
 #define ETH "eth0"
 
@@ -52,6 +52,7 @@ pthread_t tid[16];
 
 void* sendPacket(int* args)
 {
+  
   int status, datalen, sd, *ip_flags;
   const int on = 1;
   char *interface, *target, *src_ip, *dst_ip;
@@ -267,7 +268,7 @@ void* sendPacket(int* args)
 }
   
 
-  //nanosleep(&contador, NULL);
+  nanosleep(&contador, NULL);
 
   printf("\n%d paquetes UDP enviados\n", packets);
   
@@ -316,18 +317,28 @@ void* recvPacket()
         //Now process the packet
         packets++;
         //printf("\nPaquetes recibidos: %d\n", packets);
-        printf("\nMensaje del puerto: %02X %02X \n", buffer[50], buffer[51]);
 
-        short port_int;
+        int i = 12;
+        for(i; i < 25; i++)
+        {if(i%8 == 0)
+            printf("\n");
+          printf("%02X ", buffer[i]);
+          
+
+        }
+
+        printf("\n\n\n\n");
+
+        /*short port_int;
         printf("\nEl puerto es el %hu\n", buffer[50]);
-        port_int = (unsigned short) buffer[50];
+        port_int = (unsigned short) buffer[50];*/
         //
 
 
 
         gettimeofday(&tv, NULL);
         
-        //printf("\nPaquetes recibidos: %d\n", packets);
+        printf("\nPaquetes recibidos: %d\n", packets);
 
     }
 
@@ -346,8 +357,8 @@ int main(int argc, char **argv)
     sendPacket_args[0] = 1;
     sendPacket_args[1] = 32767;
 
-  resetPorts();
-  setPorts();
+  //resetPorts();
+  //setPorts();
 
   /*  while(i < 2)
     {
@@ -365,7 +376,6 @@ int main(int argc, char **argv)
           i++;
 
     }*/
-printf("QUECHINGADOS\n");
     err = pthread_create(&(tid[0]), NULL, &sendPacket, NULL);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
