@@ -583,7 +583,7 @@ void consultapuertos()
 
   conn = mysql_init(NULL);
 
-  if(mysql_query(conn, query))
+  if(mysql_query(conn, FINAL_QUERY))
             fprintf(stderr, "\nNEL con el query, quien sabe si tiene puertos abiertos, te la debo\n", mysql_error(conn));     
   else
     {
