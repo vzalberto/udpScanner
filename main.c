@@ -164,7 +164,6 @@ void* sendPacket(int* args)
 
   // Transport layer protocol (8 bits): 17 for UDP
   iphdr.ip_p = IPPROTO_UDP;
-{
 
   // Source IPv4 address (32 bits)
   if ((status = inet_pton (AF_INET, src_ip, &(iphdr.ip_src))) != 1) {
@@ -186,57 +185,41 @@ void* sendPacket(int* args)
   unsigned short packets_low_limit = 1;
   unsigned short packets_top_limit = 65535; 
 
- /* if(args[1])
-  {
-    packets_low_limit = args[0];
-    packets_top_limit = args[1];
-  }
-  else
-  {
-    packets_low_limit = 1;
-    packets_top_limit = 65535;
-  }*/
   int lote = 0;
   int packets = 1;
   struct timespec contador;
   contador.tv_nsec = 100000000L;
-  while(lote < 655)
+
+  while(packets < 65535)
   {
 
-  packets += lote; 
+      printf("\nquiero %d panochas de guapa\n",  packets);
+      // UDP header
 
-  thread_id = pthread_self();
-  printf("\nInside %lu Low limit: %d", thread_id, packets_low_limit);
-  printf("\nInside %lu Top limit: %d", thread_id, packets_top_limit);
+     // Source port number (16 bits): pick a number
+     udphdr.source = htons (4950);
 
-    while(packets < packets + 100)
-  {
-    // UDP header
+      // Destination port number (16 bits): pick a number
+     udphdr.dest = htons (packets);
 
-  // Source port number (16 bits): pick a number
-  udphdr.source = htons (4950);
+      // Length of UDP datagram (16 bits): UDP header + UDP data
+      udphdr.len = htons (UDP_HDRLEN + datalen);
 
-  // Destination port number (16 bits): pick a number
-  udphdr.dest = htons (packets);
+     // UDP checksum (16 bits)
+     udphdr.check = udp4_checksum (iphdr, udphdr, data, datalen);
 
-  // Length of UDP datagram (16 bits): UDP header + UDP data
-  udphdr.len = htons (UDP_HDRLEN + datalen);
+      // Prepare packet.
 
-  // UDP checksum (16 bits)
-  udphdr.check = udp4_checksum (iphdr, udphdr, data, datalen);
+     // First part is an IPv4 header.
+      memcpy (packet, &iphdr, IP4_HDRLEN * sizeof (uint8_t));
 
-  // Prepare packet.
-
-  // First part is an IPv4 header.
-  memcpy (packet, &iphdr, IP4_HDRLEN * sizeof (uint8_t));
-
-  // Next part of packet is upper layer protocol header.
-  memcpy ((packet + IP4_HDRLEN), &udphdr, UDP_HDRLEN * sizeof (uint8_t));
+      // Next part of packet is upper layer protocol header.
+     memcpy ((packet + IP4_HDRLEN), &udphdr, UDP_HDRLEN * sizeof (uint8_t));
 
   // Finally, add the UDP data.
   memcpy (packet + IP4_HDRLEN + UDP_HDRLEN, data, datalen * sizeof (uint8_t));
 
-  // The kernel is going to prepare layer 2 information (ethernet frame header) for us.
+ // The kernel is going to prepare layer 2 information (ethernet frame header) for us.
   // For that, we need to specify a destination for the kernel in order for it
   // to decide where to send the raw datagram. We fill in a struct in_addr with
   // the desired destination IP address, and pass this structure to the sendto() function.
@@ -268,19 +251,16 @@ void* sendPacket(int* args)
     exit (EXIT_FAILURE);
   }
 
-  memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
-  packets++;
-
  // Close socket descriptor.
   close (sd);
 
-  }
+  memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
+  packets++;
+ 
+}
+  
 
-  nanosleep(&contador, NULL);
-  printf("\nEnviado el lote: %d\n", lote);
-  lote++;
-
-  }
+  //nanosleep(&contador, NULL);
 
   printf("\n%d paquetes UDP enviados\n", packets);
   
@@ -291,8 +271,6 @@ void* sendPacket(int* args)
   free (src_ip);
   free (dst_ip);
   free (ip_flags);
-
-}
 
 }
 
@@ -339,7 +317,7 @@ void* recvPacket()
 
         gettimeofday(&tv, NULL);
         
-        printf("\nPaquetes recibidos: %d\n", packets);
+        //printf("\nPaquetes recibidos: %d\n", packets);
 
     }
 
@@ -374,7 +352,7 @@ int main(int argc, char **argv)
           i++;
 
     }*/
-
+printf("QUECHINGADOS\n");
     err = pthread_create(&(tid[0]), NULL, &sendPacket, NULL);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
