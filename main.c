@@ -598,6 +598,6 @@ void consultapuertos()
               printf("No puertos abiertos\n");
           }
 
-
-
+    mysql_free_result(res);
+    mysql_close(conn);
 }
