@@ -629,15 +629,34 @@ void setPorts()
   }
   else
   {    
-    char query[90];
-    strcat(query, INFLATE_PORT_TABLE);
-    printf("\nEstableciendo la tabla de puertos: %s\n", query);
+    char q1[50], q2[90], q3[20], q4[40];
+    strcat(q1, DELIMITER_PROCEDURE);
+    strcat(q2, PROCEDURE_DEF);
+    strcat(q3, END_DELIMITER);
+    strcat(q4, PROCEDURE_CALL);
 
-  if(mysql_query(conn, query))
+  if(mysql_query(conn, q1))
   {    
-            fprintf(stderr, "\nError al cargar lista de puertos\n", mysql_error(conn));
+            fprintf(stderr, "\nError q1\n", mysql_error(conn));
             exit(1);     
   }
+  else   if(mysql_query(conn, q2))
+  {    
+            fprintf(stderr, "\nError q2\n", mysql_error(conn));
+            exit(1);     
+  }
+  else   if(mysql_query(conn, q3))
+  {    
+            fprintf(stderr, "\nError q3\n", mysql_error(conn));
+            exit(1);     
+  }
+  else   if(mysql_query(conn, q4))
+  {    
+            fprintf(stderr, "\nError q4\n", mysql_error(conn));
+            exit(1);     
+  }
+
+
   
   else
     printf("\nTabla de puertos lista\n");
