@@ -26,10 +26,17 @@
 #define IP4_HDRLEN 20         // IPv4 header length
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 
-#define SOURCE_IP "192.168.1.105"
-#define TARGET_IP "192.168.1.1"
+//infinitum
+// #define SOURCE_IP "192.168.1.69"
+// #define TARGET_IP "192.168.1.254"
 
-#define ETH "eth0"
+//motorola
+#define SOURCE_IP "192.168.0.11"
+#define TARGET_IP "192.168.0.1"
+
+
+
+#define ETH "wlan0"
 
 #define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
 #define FINAL_QUERY "select * from puertosudp where estado = 1"
@@ -47,6 +54,8 @@ uint16_t udp4_checksum (struct ip, struct udphdr, uint8_t *, int);
 char *allocate_strmem (int);
 uint8_t *allocate_ustrmem (int);
 int *allocate_intmem (int);
+
+unsigned short respuestas[65535];
 
 pthread_t tid[16];
 
@@ -92,11 +101,8 @@ void* sendPacket(int* args)
     perror ("ioctl() failed to find interface ");
     return;
   }
-  close (sd);
 
-  // Source IPv4 address: you need to fill this out
-  //Starbucks: 10.133.241.93
-  //MOTOROLA: 192.168.0.6
+    // Source IPv4 address: you need to fill this out
 
   strcpy (src_ip, SOURCE_IP);
 
@@ -202,10 +208,10 @@ void* sendPacket(int* args)
 
   int packets = 1;
 
-while(lote < 100)
-{
+// while(lote < 100)
+// {
 
-  while(packets < (packets +650))
+  while(packets < 65535)
   {
 
       // UDP header
@@ -272,10 +278,10 @@ while(lote < 100)
   packets++;
 }
 
-  nanosleep(&contador, NULL);
-  lote++;
-  printf("\n%d\n", lote);
-}
+//   nanosleep(&contador, NULL);
+//   lote++;
+//   printf("\n%d\n", lote);
+// }
 
 
   //printf("\n%d paquetes UDP enviados\n", packets);
@@ -314,12 +320,13 @@ void* recvPacket()
     omg.sin_port = htons(4950);
     omg.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    if (bind(sock_raw, (struct sockaddr *)&omg, sizeof(omg)) < 0)
+   /* if (bind(sock_raw, (struct sockaddr *)&omg, sizeof(omg)) < 0)
     {
       perror("NEL con bind");
       exit(1);
-      }
-          packets = 0;
+      }*/
+
+        int c = 0;
 
     while(1)
     {
@@ -332,14 +339,15 @@ void* recvPacket()
             return -1;
         }
 
-        packets++;
-
         //Now process the packet
         unsigned short puerto;
         puerto = (buffer[50] << 8) + buffer[51];
+        printf("\nPuerto: %hu\n", puerto);
+
         if(puerto != 0)
         {
           
+        printf("\nPaquete: \n");
         int i = 0;
         for(i; i < 100; i++)
         {
@@ -348,18 +356,21 @@ void* recvPacket()
           printf("%02X ", buffer[i]);
         }
 
-        printf("\nEL PUTO PUERTO ES %hu\n", puerto);
+        printf("\nPuerto: %hu\n", puerto);
+        printf("\nRespuestas recibidas: %d\n", c);
         actualizaEnTabla(puerto);
+        respuestas[c] = puerto;
+        c++;
 
-        printf("\n\n\n\n");
-        gettimeofday(&tv, NULL);        
-        printf("\nPaquetes recibidos: %d\n", packets);
+         printf("\n\n\n\n");
+}
+       
+        //gettimeofday(&tv, NULL);        
+        
 
-        }
-    }
 
     return (void *) packets;    
-
+}
 }
 
 
@@ -406,6 +417,7 @@ int main(int argc, char **argv)
 
 
     sleep(120);
+    
     consultapuertos();
     printf("\nBYE\n"); 
 
@@ -611,6 +623,8 @@ void printSockaddr(struct sockaddr *in)
 
 void consultapuertos()
 {
+  printf("\nEL QUE LLEGo, LLEGo?????\n");
+
   MYSQL *conn;
   MYSQL_RES *res;
   MYSQL_ROW row;
