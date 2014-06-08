@@ -201,17 +201,22 @@ void* sendPacket(int* args)
   unsigned short packets_low_limit = 1;
   unsigned short packets_top_limit = 65535; 
 
-  int lote = 0;
+  int lote = 1;
   struct timespec contador;
   contador.tv_nsec = 100000000L;
 
 
   int packets = 1;
+  int lotes = 1;
+  int limita, limitb;
 
 // while(lote < 100)
 // {
-
-  while(packets < 65535)
+while(lotes <= 100)
+{
+  limita = packets;
+  limitb = packets + 655;
+  while(packets < limitb)
   {
 
       // UDP header
@@ -275,7 +280,14 @@ void* sendPacket(int* args)
   close (sd);
 
   memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
+
+  printf("\npaquete: %d\n", packets);
+  printf("\nlimitb: %d\n", limitb);
   packets++;
+}
+printf("\noye que pasa que ocurre\n");
+printf("\nlote: %d\n", lotes);
+lotes++;
 }
 
 //   nanosleep(&contador, NULL);
@@ -320,13 +332,13 @@ void* recvPacket()
     omg.sin_port = htons(4950);
     omg.sin_addr.s_addr = htonl(INADDR_ANY);
 
-   /* if (bind(sock_raw, (struct sockaddr *)&omg, sizeof(omg)) < 0)
+    if (bind(sock_raw, (struct sockaddr *)&omg, sizeof(omg)) < 0)
     {
       perror("NEL con bind");
       exit(1);
-      }*/
+      }
 
-        int c = 0;
+        int c = 1;
 
     while(1)
     {
@@ -344,7 +356,7 @@ void* recvPacket()
         puerto = (buffer[50] << 8) + buffer[51];
         printf("\nPuerto: %hu\n", puerto);
 
-        if(puerto != 0)
+        /*if(puerto != 0)
         {
           
         printf("\nPaquete: \n");
@@ -356,14 +368,14 @@ void* recvPacket()
           printf("%02X ", buffer[i]);
         }
 
-        printf("\nPuerto: %hu\n", puerto);
+        printf("\nPuerto: %hu\n", puerto);*/
         printf("\nRespuestas recibidas: %d\n", c);
-        actualizaEnTabla(puerto);
-        respuestas[c] = puerto;
+        //actualizaEnTabla(puerto);
+        //respuestas[c] = puerto;
         c++;
 
-         printf("\n\n\n\n");
-}
+         //printf("\n\n\n\n");
+
        
         //gettimeofday(&tv, NULL);        
         
@@ -419,7 +431,8 @@ int main(int argc, char **argv)
     sleep(120);
     
     consultapuertos();
-    printf("\nBYE\n"); 
+    printf("\nBYE\n");
+
 
     return 0;
 }
