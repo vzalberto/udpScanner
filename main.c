@@ -40,7 +40,7 @@
 #define ETH "wlan0"
 
 #define PORT_REPLY_UPDATE "update puertosudp set estado = 0 where puerto = "
-#define FINAL_QUERY "select * from puertosudp where estado = 1"
+#define FINAL_QUERY "select * from puertosudp where estado = 0"
 
 #define DELIMITER_PROCEDURE "delimiter $$ drop procedure if exists load_port_table $$ "
 #define PROCEDURE_DEF "create procedure load_port_table () begin declare crs int default 1; while crs < 65536 do insert into puertosudp (puerto) values (crs); set crs = crs + 1; end while; end $$ "
@@ -282,7 +282,7 @@ while(lotes <= 100)
 
   memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
 
-nanosleep(&contador, NULL);
+//nanosleep(&contador, NULL);
   packets++;
 }
 printf("\noye que pasa que ocurre\n");
@@ -338,7 +338,7 @@ void* recvPacket()
       exit(1);
       }
 
-        int c = 1;
+        int c = 0;
 
     while(1)
     {
@@ -370,7 +370,7 @@ void* recvPacket()
 
         printf("\nPuerto: %hu\n", puerto);*/
         printf("\nRespuestas recibidas: %d\n", c);
-        //actualizaEnTabla(puerto);
+        actualizaEnTabla(puerto);
         //respuestas[c] = puerto;
         c++;
 
@@ -399,7 +399,7 @@ int main(int argc, char **argv)
   //resetPorts();
   //setPorts();
 
-  /*  while(i < 2)
+    while(i < 2)
     {
       
       err = pthread_create(&(tid[i]), NULL, &sendPacket, sendPacket_args);
@@ -414,7 +414,7 @@ int main(int argc, char **argv)
           sendPacket_args[1]+=32767;
           i++;
 
-    }*/
+    }
     err = pthread_create(&(tid[0]), NULL, &sendPacket, NULL);
         if (err != 0)
             printf("\ncan't create thread :[%s]", strerror(err));
@@ -428,7 +428,7 @@ int main(int argc, char **argv)
             printf("\n Receiving...\n");
 
 
-    sleep(120);
+    sleep(20);
     
     consultapuertos();
     printf("\nBYE\n");
@@ -613,8 +613,11 @@ void actualizaEnTabla(unsigned short puerto)
     return -1;
   }
 
-  char pseudo_insert_query[60];
-  memset(pseudo_insert_query, 0x00, 59);
+  // char pseudo_insert_query[60];
+  // memset(pseudo_insert_query, 0x00, 59);
+
+  char *pseudo_insert_query = malloc(60);
+  pseudo_insert_query[0] = 0x00;
   char port_string[5];
 
   strcat(pseudo_insert_query, PORT_REPLY_UPDATE);
@@ -627,6 +630,7 @@ void actualizaEnTabla(unsigned short puerto)
       fprintf(stderr, "\nNEL con la actualizacion del puerto\n", mysql_error(conn));
 
   mysql_close(conn);
+  free(pseudo_insert_query);
 }
 
 void printSockaddr(struct sockaddr *in)
@@ -649,23 +653,37 @@ void consultapuertos()
 
   conn = mysql_init(NULL);
 
-  if(mysql_query(conn, FINAL_QUERY))
+  // char *final_query = malloc(20);
+  // final_query[0] = 0x00;
+  // strcat(final_query, FINAL_QUERY);
+
+  //memcpy(final_query, FINAL_QUERY, )
+
+//printf("\n%s\n", final_query);
+  
+  conn = mysql_init(NULL);
+  if(!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) 
+  { 
+    fprintf(stderr, "ERROR para conectarse a mysql", mysql_error(conn));
+    return -1;
+  }
+
+  if(mysql_query(conn, "select * from puertosudp where estado = 0"))
             fprintf(stderr, "\nNEL con el query, quien sabe si tiene puertos abiertos, te la debo\n", mysql_error(conn));     
   else
     {
             res = mysql_use_result(conn);
-            if((row = mysql_fetch_row(res)) != NULL)
+            while((row = mysql_fetch_row(res)) != NULL)
             {
-              printf("\nPUERTOS ABIERTOS\n");
               printf("%s  ", row[0]);
             }
-            else
-            
-              printf("No puertos abiertos\n");
           }
+
+          printf("\noyeme\n");
 
     mysql_free_result(res);
     mysql_close(conn);
+    //free(final_query);
 }
 
 void setPorts()
