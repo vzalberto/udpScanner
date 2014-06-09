@@ -374,10 +374,6 @@ void* recvPacket()
         //respuestas[c] = puerto;
         c++;
 
-         //printf("\n\n\n\n");
-
-       
-        //gettimeofday(&tv, NULL);        
         
 
 }
@@ -613,9 +609,6 @@ void actualizaEnTabla(unsigned short puerto)
     return -1;
   }
 
-  // char pseudo_insert_query[60];
-  // memset(pseudo_insert_query, 0x00, 59);
-
   char *pseudo_insert_query = malloc(60);
   pseudo_insert_query[0] = 0x00;
   char port_string[5];
@@ -624,7 +617,6 @@ void actualizaEnTabla(unsigned short puerto)
 
   sprintf(port_string, "%hu", puerto);
   strncat(pseudo_insert_query, port_string, 5);
-  printf("\n%s\n", pseudo_insert_query);
 
   if(mysql_query(conn, pseudo_insert_query))
       fprintf(stderr, "\nNEL con la actualizacion del puerto\n", mysql_error(conn));
@@ -640,8 +632,6 @@ void printSockaddr(struct sockaddr *in)
 
 void consultapuertos()
 {
-  printf("\nEL QUE LLEGo, LLEGo?????\n");
-
   MYSQL *conn;
   MYSQL_RES *res;
   MYSQL_ROW row;
@@ -651,16 +641,6 @@ void consultapuertos()
   char *password = "//lsoazules"; 
   char *database = "redes";
 
-  conn = mysql_init(NULL);
-
-  // char *final_query = malloc(20);
-  // final_query[0] = 0x00;
-  // strcat(final_query, FINAL_QUERY);
-
-  //memcpy(final_query, FINAL_QUERY, )
-
-//printf("\n%s\n", final_query);
-  
   conn = mysql_init(NULL);
   if(!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) 
   { 
@@ -672,14 +652,13 @@ void consultapuertos()
             fprintf(stderr, "\nNEL con el query, quien sabe si tiene puertos abiertos, te la debo\n", mysql_error(conn));     
   else
     {
+            printf("\nPUERTOS QUE ENVIARON RESPUESTA ICMP DE ERROR:\n\n");
             res = mysql_use_result(conn);
             while((row = mysql_fetch_row(res)) != NULL)
             {
-              printf("%s  ", row[0]);
+              printf("%s  \n", row[0]);
             }
           }
-
-          printf("\noyeme\n");
 
     mysql_free_result(res);
     mysql_close(conn);
