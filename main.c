@@ -34,7 +34,8 @@
 #define SOURCE_IP "192.168.0.11"
 #define TARGET_IP "192.168.0.1"
 
-
+#define _10MILI "91603005"
+#define _5MILI "45801502"
 
 #define ETH "wlan0"
 
@@ -203,7 +204,7 @@ void* sendPacket(int* args)
 
   int lote = 1;
   struct timespec contador;
-  contador.tv_nsec = 100000000L;
+  contador.tv_nsec = _5MILI;
 
 
   int packets = 1;
@@ -281,8 +282,7 @@ while(lotes <= 100)
 
   memset (packet, 0x00, IP4_HDRLEN + UDP_HDRLEN + datalen);
 
-  printf("\npaquete: %d\n", packets);
-  printf("\nlimitb: %d\n", limitb);
+nanosleep(&contador, NULL);
   packets++;
 }
 printf("\noye que pasa que ocurre\n");
@@ -290,7 +290,7 @@ printf("\nlote: %d\n", lotes);
 lotes++;
 }
 
-//   nanosleep(&contador, NULL);
+//   
 //   lote++;
 //   printf("\n%d\n", lote);
 // }
@@ -380,10 +380,10 @@ void* recvPacket()
         //gettimeofday(&tv, NULL);        
         
 
-
+}
     return (void *) packets;    
 }
-}
+
 
 
 int main(int argc, char **argv)
